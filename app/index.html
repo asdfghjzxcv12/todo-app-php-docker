@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Todo アプリケーション</title>
+        <!-- Tailwind CSS を読み込む -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            body {
+                font-family: "Inter", sans-serif;
+                background-color: #f0f2f5;
+            }
+        </style>
+    </head>
+    <body class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Todo リスト</h1>
+
+            <!-- 新しいTodoを追加するフォーム -->
+            <div class="mb-6 flex space-x-2">
+                <input
+                    type="text"
+                    id="newTodoInput"
+                    placeholder="新しいTodoを追加"
+                    class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                <button
+                    id="addTodoButton"
+                    class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md"
+                >
+                    追加
+                </button>
+            </div>
+
+            <!-- Todoリストの表示エリア -->
+            <ul id="todoList" class="space-y-3">
+                <!-- TodoアイテムはJavaScriptでここに挿入されます -->
+                <li class="bg-gray-50 p-4 rounded-lg shadow-sm flex items-center justify-between">
+                    <span class="text-gray-700">Loading Todos...</span>
+                </li>
+            </ul>
+        </div>
+
+        <script>
+            const todoList = document.getElementById('todoList');
+            const newTodoInput = document.getElementById('newTodoInput');
+            const addTodoButton = document.getElementById('addTodoButton');
+            const apiUrl = 'http://localhost:8081/api/todos'; // APIのエンドポイント
+
+            // Todoリストを読み込む関数
+            async function fetchTodos() {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const todos = await response.json();
+                    renderTodos(todos);
+                } catch (error) {
+                    console.error('Error fetching todos:', error);
+                    todoList.innerHTML = `<li class="text-red-600">Todoの読み込みに失敗しました: ${error.message}</li>`;
+                }
+            }
+
+            // TodoリストをHTMLにレンダリングする関数
+            function renderTodos(todos) {
+                todoList.innerHTML = ''; // 既存のリストをクリア
+                if (todos.length === 0) {
+                    todoList.innerHTML = `<li class="text-gray-500 text-center py-4">Todoがありません。新しいTodoを追加しましょう！</li>`;
+                    return;
+                }
+                todos.forEach(todo => {
+                    const li = document.createElement('li');
+                    li.className = `bg-gray-50 p-4 rounded-lg shadow-sm flex items-center justify-between transition-all duration-200 ease-in-out ${todo.completed ? 'opacity-60 line-through' : ''}`;
+                    li.dataset.id = todo.id; // Todo IDをデータ属性として保存
+
+                    li.innerHTML = `
+                        <div class="flex items-center">
+                            <input type="checkbox" ${todo.completed ? 'checked' : ''}
+                                   class="mr-3 h-5 w-5 text-blue-600 rounded focus:ring-blue-500 todo-checkbox">
+                            <span class="text-gray-700 text-lg">${escapeHtml(todo.title)}</span>
+                        </div>
+                        <button class="text-red-500 hover:text-red-700 transition duration-200 ease-in-out delete-button">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    `;
+                    // イベントリスナーを動的に追加
+                    li.querySelector('.todo-checkbox').addEventListener('change', (e) => {
+                        toggleTodoStatus(todo.id, e.target.checked);
+                    });
+                    li.querySelector('.delete-button').addEventListener('click', () => {
+                        deleteTodo(todo.id);
+                    });
+
+                    todoList.appendChild(li);
+                });
+            }
+
+            // 新しいTodoを追加する関数
+            addTodoButton.addEventListener('click', async () => {
+                const title = newTodoInput.value.trim();
+                if (title === '') return;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ title: title, completed: false })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    newTodoInput.value = ''; // 入力フィールドをクリア
+                    fetchTodos(); // Todoリストを再読み込み
+                } catch (error) {
+                    console.error('Error adding todo:', error);
+                    alert('Todoの追加に失敗しました。'); // 仮のアラート
+                }
+            });
+
+            // Todoの完了状態を切り替える関数
+            async function toggleTodoStatus(id, completed) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ id: id, title: '', completed: completed }) // titleは必須なので空で送る
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    fetchTodos(); // Todoリストを再読み込み
+                } catch (error) {
+                    console.error('Error updating todo status:', error);
+                    alert('Todoの更新に失敗しました。'); // 仮のアラート
+                }
+            };
+
+            // Todoを削除する関数
+            async function deleteTodo(id) {
+                if (!confirm('本当にこのTodoを削除しますか？')) { // 確認ダイアログ
+                    return;
+                }
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ id: id })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    fetchTodos(); // Todoリストを再読み込み
+                } catch (error) {
+                    console.error('Error deleting todo:', error);
+                    alert('Todoの削除に失敗しました。'); // 仮のアラート
+                }
+            };
+
+            // HTMLエスケープ関数 (セキュリティ対策)
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            }
+
+            // ページ読み込み時にTodoリストを読み込む
+            fetchTodos();
+        </script>
+    </body>
+    </html>
+    

@@ -1,0 +1,61 @@
+# TODO/docker-compose.yml
+
+# Docker Compose のバージョン指定
+version: '3.8'
+
+services:
+  # PHPアプリケーションを動かすためのPHP-FPMサービス
+  php:
+    # Dockerfile が './php' ディレクトリにあることを示す
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    # ホスト（あなたのPC）の './app' ディレクトリを
+    # コンテナの '/var/www/html/app' にマウントする（コードを共有する）
+    volumes:
+      - ./app:/var/www/html/app
+    # 環境変数でPHPのタイムゾーンを設定（日本時間）
+    environment:
+      PHP_INI_DATE_TIMEZONE: "Asia/Tokyo"
+    # コンテナが停止した場合に自動的に再起動する
+    restart: always
+    # PHPがMySQLに依存するように追加
+    depends_on:
+      - mysql
+
+  # WebサーバーNginxサービス
+  web:
+    # Dockerfile が './web' ディレクトリにあることを示す
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    # ホストの8081番ポートを、コンテナの80番ポートに接続する（ブラウザからアクセスできるようにする）
+    ports:
+      - "8081:80" # ここを "8081:80" に修正しました！
+    # ホストの './app' ディレクトリと './nginx/default.conf' をコンテナにマウント
+    volumes:
+      - ./app:/var/www/html/app
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    # PHPサービスが起動してからNginxサービスを起動する
+    depends_on:
+      - php
+    # コンテナが停止した場合に自動的に再起動する
+    restart: always
+
+  # MySQLサービス
+  mysql:
+    image: mysql:8.0 # MySQL 8.0のイメージを使用
+    container_name: sports-mysql-1 # コンテナ名を指定
+    environment:
+      MYSQL_ROOT_PASSWORD: password # ルートユーザーのパスワード
+      MYSQL_DATABASE: testdb # 作成するデータベース名
+    volumes:
+      - db_data:/var/lib/mysql # データを永続化するためのボリューム
+    ports:
+      - "3306:3306" # ホストの3306ポートとコンテナの3306ポートをマッピング
+    restart: always
+
+# ボリューム定義
+volumes:
+  db_data:
+
