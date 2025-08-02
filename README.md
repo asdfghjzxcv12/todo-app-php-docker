@@ -41,8 +41,8 @@ JavaScript (Fetch API を使用した非同期通信)
 
 リポジトリのクローン:
 
-git clone [あなたのGitHubリポジトリURL]
-cd [あなたのリポジトリ名 (例: TODO)]
+git clone https://github.com/asdfghjzxcv12/todo-app-php-docker.git
+cd todo-app-php-docker
 
 Dockerコンテナの起動:
 プロジェクトのルートディレクトリ (docker-compose.yml がある場所) で、以下のコマンドを実行します。
@@ -86,11 +86,11 @@ Todoリストの初期表示
 
 完了状態の切り替え
 
+![Todoリスト初期表示](uploaded:スクリーンショット 2025-08-02 123057.png-7d41fac5-ea27-47e7-aa18-a4769af4604b)
 
+![新しいTodo追加](uploaded:スクリーンショット 2025-08-02 123612.png-3cfb4765-2658-48cd-b9b0-8f8b0711f21d)
 
-
-
-
+![完了状態切り替え](uploaded:スクリーンショット 2025-08-02 123633.png-81d0e5bb-c7eb-4708-a409-ebb52af4a68c)
 
 工夫した点・学んだこと・課題と解決策
 全体的な学習プロセスと生成AIによる開発加速
@@ -110,7 +110,7 @@ Todoリストの初期表示
 学んだこと: Docker Composeにおけるサービス間の連携メカニズム、NginxのFastCGI設定の重要性、そしてログを詳細に読み解き、生成AIの助けを借りながら問題の原因を特定するデバッグスキルが格段に向上しました。
 
 2. PHPバックエンドとMySQLの連携
-課題: PHPアプリケーションからMySQLデータベースへの接続、CRUD操作（特に更新処理）の実装で、データ型の不一致やSQL構文エラーに直面しました。例えば、Todoの「完了」状態を切り替える際に、MySQLのログに SQLSTATE[HY000]: General error: 1366 Incorrect integer value: '' for column 'completed' というエラーが出力され、フロントエンドから送られるデータ形式とバックエンドのバリデーション、そしてデータベースのデータ型（BOOLEAN）とのミスマッチが原因で 400 Bad Request エラーが頻発しました。
+課題: PHPアプリケーションからMySQLデータベースへの接続、CRUD操作（特に更新処理）の実装で、データ型の不一致やSQL構文エラーに直面しました。例えば、Todoの「完了」状態を切り替える際に、MySQLのログに SQLSTATE[HY000]: General error: 1366 Incorrect integer value: '' for column 'completed" というエラーが出力され、フロントエンドから送られるデータ形式とバックエンドのバリデーション、そしてデータベースのデータ型（BOOLEAN）とのミスマッチが原因で 400 Bad Request エラーが頻発しました。
 
 生成AIの活用: 「PHPでMySQLのBOOLEAN型を扱うにはどうすれば良いか」「Incorrect integer value エラーの原因は何か」「PUTリクエストでタイトルが空の場合のベストプラクティスは」といった具体的なエラーメッセージや疑問点をGeminiに質問しました。その結果、PHPの (bool) キャストや (int) キャストでデータを正確に変換する必要があること、また更新処理においてフロントエンドから不要なデータが送られてきた場合のバックエンドでの対応方法（既存データをデータベースから読み込み、足りない部分を補完するロジック）について具体的なコード例とアドバイスを得られました。
 
@@ -138,6 +138,6 @@ Udemyの講座で基礎を固めつつも、実践的な開発では予期せぬ
 テストの導入: ユニットテストや結合テストを導入し、コードの品質と信頼性をさらに高めたいです。
 
 連絡先
-[あなたの名前]
-[あなたのメールアドレス]
-[あなたのGitHubプロフィールへのリンク (任意)]
+町田 友希
+mynamemachita@gmail.com
+GitHubプロフィール: https://github.com/asdfghjzxcv12
